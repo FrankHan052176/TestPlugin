@@ -2,3 +2,5 @@ name: TestPlugin
 version: '${project.version}'
 main: me.frankhan2004.testplugin.TestPlugin
 api-version: 1.18
+commands:
+  test:

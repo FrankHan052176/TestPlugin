@@ -4,6 +4,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,19 +14,28 @@ import java.util.List;
 import java.util.Map;
 
 public final class TestPlugin extends JavaPlugin implements CommandExecutor {
-    private Map<String,LangManager> langs = new HashMap<>();
+    private static TestPlugin plugin;
+    private final Map<String,LangManager> langs = new HashMap<>();
     public final File langsFolder = new File(getDataFolder(),"langs");
+    public final File dataFile = new File(getDataFolder(),"data.yml");
     public List<String> loadList;
+
+    public static TestPlugin getPlugin() {
+        return plugin;
+    }
 
     @Override
     public void onEnable() {
+        plugin = this;
         // 保存config.yml
         saveDefaultConfig();
         loadList = getConfig().getStringList("readEntry");
         // 保存另外的文件,目录使用相对目录
         langsFolder.mkdirs();
         saveResource("langs/zh_cn.yml",false);
+        saveResource("data.yml",false);
         loadLang();
+        getCommand("test").setExecutor(this);
     }
 
     @Override
@@ -56,6 +66,19 @@ public final class TestPlugin extends JavaPlugin implements CommandExecutor {
                 }
             }else {
                 sender.sendMessage("所需要的语言没有被读取");
+            }
+        }else if (args.length == 1) {
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(dataFile);
+            if (args[0].equals("serialize")) {
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    yaml.set("item",Util.itemStackSerialize(player.getInventory().getItemInMainHand()));
+                }
+            }else if (args[0].equals("deserialize")) {
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    player.getInventory().setItemInMainHand(Util.itemStackDeserialize(yaml.getString("item")));
+                }
             }
         }
         return false;
